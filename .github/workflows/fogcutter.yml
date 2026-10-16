@@ -1,0 +1,30 @@
+name: Check External Blockers
+
+on:
+  schedule:
+    - cron: "0 8 * * *" # Run daily at 08:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview resolved blockers without executing follow-up actions"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+  actions: write
+
+jobs:
+  fogcutter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check external blockers
+        uses: ./
+        with:
+          config: .github/blockers.yaml
+          dry_run: ${{ inputs.dry_run || false }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,77 @@
+# Example configuration for fogcutter (.github/blockers.yaml)
+repository: canonical/authorization-service
+
+# Optional: scan source code and open GitHub issues for inline blocker annotations
+scan:
+  paths:
+    - "."
+  ignore:
+    - "vendor"
+    - "testdata"
+    - "*_test.go"
+    - "README.md"
+  issues: false
+  issue_label: "blocked"
+
+# Default follow-up action for scanned code blockers when none is explicitly set
+default_actions:
+  - type: create_issue
+    title: "Unblocked: {{.SourceSummary}}"
+    body: |
+      External blocker **{{.ID}}** is now resolved!
+
+      - **Source:** `{{.SourceSummary}}`
+      - **Resolution:** {{.Resolution}}
+      - **Location:** `{{.Location}}`
+      - **Context:** {{.Description}}
+    labels:
+      - "unblocked"
+
+blockers:
+  # 1. External GitHub Issue or PR blocker
+  - id: kratos-multistatements-fix
+    description: "Remove multiStatements DSN workaround in internal/db/conn.go"
+    source:
+      type: github-issue
+      repo: ory/kratos
+      issue: 364
+      reason: completed # optional: only trigger if closed as completed (not 'not_planned')
+    on_resolved:
+      - type: create_issue
+        title: "Remove Kratos DSN workaround (ory/kratos#364 closed)"
+        labels: ["tech-debt", "unblocked"]
+      - type: comment_issue
+        issue: 42
+        body: |
+          Upstream blocker {{.Resolution}}.
+          @claude please remove the DSN workaround in `internal/db/conn.go` and open a PR.
+
+  # 2. Snapcraft package release / channel version blocker (canonical/identity-platform-login-ui#983)
+  - id: login-ui-983-go-1.26.9
+    description: "Rebuild identity-platform-login-ui rock once Go 1.26.9 is published to go/1.26/stable"
+    source:
+      type: snapcraft
+      snap: go/1.26/stable # or snap: go + channel: 1.26/stable
+      version: ">=1.26.9"
+    on_resolved:
+      - type: comment_issue
+        repo: canonical/identity-platform-login-ui
+        issue: 983
+        labels: ["unblocked"]
+        remove_labels: ["blocked"]
+        body: |
+          `go/1.26/stable` now has Go >= 1.26.9 ({{.Resolution}}).
+          This CVE issue is unblocked and ready for a rock rebuild.
+
+  # 3. Upstream GitHub Release / Tag version blocker
+  - id: openfga-batch-check-release
+    description: "Adopt OpenFGA v1.8.0+ native batch-check API"
+    source:
+      type: github-release
+      repo: openfga/openfga
+      version: ">=v1.8.0"
+    on_resolved:
+      - type: command
+        command: |
+          echo "Launching coding agent for {{.ID}}: {{.Resolution}}"
+          # e.g. claude -p "Upgrade go.mod to openfga >= v1.8.0 and refactor internal/integration/openfga"
