@@ -180,6 +180,7 @@ func scanFile(path string, defaultActions []config.ActionConfig) ([]config.Block
 //   - github-issue:owner/repo#123
 //   - github-release:owner/repo>=v1.2.0
 //   - snap:lxd:latest/stable>=5.21  or  snap:lxd>=5.21
+//   - dep:owner/repo[@ref]:manifest:package>=1.2.3  (ref defaults to the latest release)
 func ParseSpec(spec string) (config.SourceConfig, error) {
 	spec = strings.TrimSpace(spec)
 	if m := ghURLRe.FindStringSubmatch(spec); m != nil {
@@ -251,6 +252,30 @@ func ParseSpec(spec string) (config.SourceConfig, error) {
 			Snap:    snapName,
 			Channel: channel,
 			Version: constraint,
+		}, nil
+	}
+
+	if strings.HasPrefix(spec, "dep:") || strings.HasPrefix(spec, "dependency:") {
+		rest := strings.TrimPrefix(strings.TrimPrefix(spec, "dependency:"), "dep:")
+		m := verOpRe.FindStringSubmatch(rest)
+		if m == nil {
+			return config.SourceConfig{}, fmt.Errorf("invalid dep spec %q (missing version constraint)", spec)
+		}
+		parts := strings.Split(strings.TrimSpace(m[1]), ":")
+		if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+			return config.SourceConfig{}, fmt.Errorf("invalid dep spec %q (want dep:owner/repo[@ref]:manifest:package>=version)", spec)
+		}
+		repo, ref := parts[0], ""
+		if i := strings.IndexByte(repo, '@'); i != -1 {
+			repo, ref = repo[:i], repo[i+1:]
+		}
+		return config.SourceConfig{
+			Type:     "dependency",
+			Repo:     repo,
+			Ref:      ref,
+			Manifest: parts[1],
+			Package:  parts[2],
+			Version:  strings.TrimSpace(m[2]),
 		}, nil
 	}
 

@@ -74,6 +74,15 @@ func SummarizeSource(src config.SourceConfig) string {
 		return fmt.Sprintf("http:%s", src.URL)
 	case "command":
 		return fmt.Sprintf("cmd:%s", src.Command)
+	case "dependency":
+		ref := src.Ref
+		if src.RefFile != "" {
+			ref = "<" + src.RefFile + ">"
+		}
+		if ref == "" {
+			ref = "latest"
+		}
+		return fmt.Sprintf("dep:%s@%s:%s:%s%s", src.Repo, ref, src.Manifest, src.Package, src.Version)
 	default:
 		return src.Type
 	}
@@ -109,6 +118,8 @@ func (e *Evaluator) Check(ctx context.Context, b config.Blocker) Result {
 		resolved, resolution, err = e.checkHTTP(ctx, b.Source)
 	case "command":
 		resolved, resolution, err = e.checkCommand(ctx, b.Source)
+	case "dependency":
+		resolved, resolution, err = e.checkDependency(ctx, b.Source)
 	default:
 		err = fmt.Errorf("unsupported source type %q", b.Source.Type)
 	}

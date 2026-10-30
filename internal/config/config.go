@@ -53,7 +53,7 @@ type Blocker struct {
 
 // SourceConfig specifies how to check whether an external blocker is resolved.
 type SourceConfig struct {
-	// Type is one of: "github-issue", "github-release", "snapcraft", "http", "command"
+	// Type is one of: "github-issue", "github-release", "snapcraft", "http", "command", "dependency"
 	Type string `yaml:"type" json:"type"`
 
 	// GitHub Issue / PR / Release fields:
@@ -84,6 +84,19 @@ type SourceConfig struct {
 
 	// Command check fields:
 	Command string `yaml:"command,omitempty" json:"command,omitempty"`
+
+	// Dependency check fields: resolved when Package in Manifest of Repo at Ref satisfies Version.
+	// Use it for local overrides (e.g. a CVE bump of a transitive dependency) that upstream
+	// will make redundant once it ships the fixed version itself.
+	Manifest string `yaml:"manifest,omitempty" json:"manifest,omitempty"` // Path in Repo, e.g. "go.mod", "uv.lock", "web/package-lock.json"
+	Package  string `yaml:"package,omitempty" json:"package,omitempty"`   // e.g. "golang.org/x/net", "urllib3"
+	// Ref is a git tag/branch/SHA, or "latest" (default) for the highest non-prerelease release.
+	Ref string `yaml:"ref,omitempty" json:"ref,omitempty"`
+	// RefFile and RefRegex read the ref from a local file instead, so the check follows the
+	// upstream version you actually build (e.g. rockcraft.yaml with `source-tag: (\S+)`).
+	// The first capture group (or the whole match) is used. Takes precedence over Ref.
+	RefFile  string `yaml:"ref_file,omitempty" json:"ref_file,omitempty"`
+	RefRegex string `yaml:"ref_regex,omitempty" json:"ref_regex,omitempty"`
 }
 
 // ActionConfig defines a follow-up action to run once a blocker is resolved.
@@ -139,6 +152,9 @@ func (s *SourceConfig) Normalize() {
 	if s.Type == "snap" {
 		s.Type = "snapcraft"
 	}
+	if s.Type == "dep" {
+		s.Type = "dependency"
+	}
 	if s.Type == "snapcraft" && strings.Contains(s.Snap, "/") && s.Channel == "" {
 		parts := strings.SplitN(s.Snap, "/", 2)
 		s.Snap = parts[0]
@@ -184,6 +200,15 @@ func deriveID(b Blocker, idx int) string {
 			ch = "latest/stable"
 		}
 		return fmt.Sprintf("snap:%s:%s:%s%s", b.Source.Snap, ch, b.Source.Version, b.Source.Revision)
+	case "dependency":
+		ref := b.Source.Ref
+		if b.Source.RefFile != "" {
+			ref = b.Source.RefFile
+		}
+		if ref == "" {
+			ref = "latest"
+		}
+		return fmt.Sprintf("dep:%s@%s:%s:%s:%s", b.Source.Repo, ref, b.Source.Manifest, b.Source.Package, b.Source.Version)
 	default:
 		return fmt.Sprintf("blocker-%d", idx+1)
 	}
@@ -219,8 +244,15 @@ func (b *Blocker) Validate() error {
 		if b.Source.Command == "" {
 			return fmt.Errorf("blocker %q: command source requires 'command'", b.ID)
 		}
+	case "dependency":
+		if b.Source.Repo == "" || b.Source.Manifest == "" || b.Source.Package == "" || b.Source.Version == "" {
+			return fmt.Errorf("blocker %q: dependency source requires 'repo', 'manifest', 'package' and 'version'", b.ID)
+		}
+		if (b.Source.RefFile == "") != (b.Source.RefRegex == "") {
+			return fmt.Errorf("blocker %q: dependency source needs both 'ref_file' and 'ref_regex' (or neither)", b.ID)
+		}
 	default:
-		return fmt.Errorf("blocker %q: unknown source type %q (expected github-issue, github-release, snapcraft, http, or command)", b.ID, b.Source.Type)
+		return fmt.Errorf("blocker %q: unknown source type %q (expected github-issue, github-release, snapcraft, http, command, or dependency)", b.ID, b.Source.Type)
 	}
 	return nil
 }
