@@ -4,7 +4,7 @@ Guidelines for AI coding agents (and humans) working in this repository. See [CO
 
 ## Project overview
 
-`fogcutter` is a single-binary Go CLI and composite GitHub Action that checks whether external blockers are resolved and triggers follow-up actions. The module is `github.com/DanielArndt/fogcutter`; the only direct dependency is `gopkg.in/yaml.v3`.
+`fogcutter` is a single-binary Go CLI that checks whether external blockers are resolved and triggers follow-up actions. The module is `github.com/DanielArndt/fogcutter`; the only direct dependency is `gopkg.in/yaml.v3`.
 
 | Path | Purpose |
 | :--- | :--- |
@@ -15,7 +15,6 @@ Guidelines for AI coding agents (and humans) working in this repository. See [CO
 | `internal/config` | YAML config schema |
 | `internal/manifest` | Dependency manifest and lockfile parsing |
 | `internal/version` | Version constraint handling |
-| `action.yml` | The composite GitHub Action (builds the CLI from source) |
 
 ## Build, test and lint
 
@@ -55,5 +54,5 @@ See [CONTRIBUTIONS.md](CONTRIBUTIONS.md) for scopes and examples.
 - Match the surrounding style; `gofmt` and golangci-lint (see `.golangci.yml`) must pass.
 - Every Go and YAML file starts with the SPDX header used by the existing files (`SPDX-FileCopyrightText` and `SPDX-License-Identifier: Apache-2.0`); add it to new files.
 - Pin every GitHub Action to a full commit SHA with a version comment (e.g. `# v7.0.1`); Dependabot keeps pins current.
-- Keep `action.yml` building with the Go version in `go.mod`.
+- [fogcutter-action](https://github.com/DanielArndt/fogcutter-action) downloads the release archives and verifies them against `checksums.txt`; keep the archive names (`fogcutter_<tag>_<os>_<arch>.<ext>`) and the checksum file stable, or update the Action in step.
 - Never commit secrets or tokens, and never log them.
