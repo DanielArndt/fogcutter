@@ -336,7 +336,7 @@ func (e *Evaluator) checkSnapcraft(ctx context.Context, src config.SourceConfig)
 			continue
 		}
 		fullTrackRisk := entry.Channel.Track + "/" + entry.Channel.Risk
-		if entry.Channel.Name != wantChannel && fullTrackRisk != wantChannel && !(wantChannel == entry.Channel.Risk && entry.Channel.Track == "latest") {
+		if entry.Channel.Name != wantChannel && fullTrackRisk != wantChannel && (wantChannel != entry.Channel.Risk || entry.Channel.Track != "latest") {
 			continue
 		}
 
