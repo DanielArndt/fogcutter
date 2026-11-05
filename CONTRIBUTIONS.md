@@ -83,25 +83,20 @@ This project follows the **[Conventional Commits](https://www.conventionalcommit
 
 - Go (the version in [`go.mod`](go.mod))
 - [golangci-lint](https://golangci-lint.run/) v2
+- `make`
 
-### Running Tests
+### Make Targets
 
-```bash
-go build ./...
-go vet ./...
-go test -race ./...
-```
+| Target | What it does |
+| :--- | :--- |
+| `make build` | Builds the CLI to `./fogcutter` and compiles all packages |
+| `make test` | Runs `go vet` and `go test -race ./...` |
+| `make lint` | Fails on unformatted files, then runs golangci-lint (configured in [`.golangci.yml`](.golangci.yml)) |
+| `make fmt` | Formats all Go files with `gofmt -w` |
+| `make all` | Runs `lint`, `test` and `build` |
+| `make clean` | Removes the built binary |
 
-### Linting
-
-CI checks formatting and runs golangci-lint (configured in [`.golangci.yml`](.golangci.yml)):
-
-```bash
-gofmt -l .          # must print nothing; fix with: gofmt -w .
-golangci-lint run ./...
-```
-
-CI runs all of the above on every pull request and on pushes to `main`.
+Run `make all` before opening a PR. CI runs the same `make build test` and `make lint` targets on every pull request and on pushes to `main`.
 
 ---
 
