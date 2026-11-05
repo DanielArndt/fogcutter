@@ -1,0 +1,7 @@
+version: "2"
+linters:
+  exclusions:
+    rules:
+      # Unchecked errors on Close and fmt.Fprint* are idiomatic and not actionable.
+      - linters: [errcheck]
+        text: "Error return value of `(\\(?\\*?os\\.File\\)?\\.Close|[\\w.]*\\.Close|fmt\\.Fprint(ln|f)?)` is not checked"

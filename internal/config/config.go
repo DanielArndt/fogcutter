@@ -59,13 +59,13 @@ type SourceConfig struct {
 	// GitHub Issue / PR / Release fields:
 	// Repo in "owner/repo" format (or shorthand URL/ref in Issue)
 	Repo   string `yaml:"repo,omitempty" json:"repo,omitempty"`
-	Issue  int    `yaml:"issue,omitempty" json:"issue,omitempty"` // Issue or PR number
+	Issue  int    `yaml:"issue,omitempty" json:"issue,omitempty"`   // Issue or PR number
 	Reason string `yaml:"reason,omitempty" json:"reason,omitempty"` // Optional: e.g. "completed" (ignore "not_planned")
 
 	// Version / Tag constraint (used by github-release, snapcraft, http, command):
 	// Supports ">=1.2.0", "==2.0.0", "v1.3.0" (defaults to >=).
-	Version        string `yaml:"version,omitempty" json:"version,omitempty"`
-	IncludePre     bool   `yaml:"include_prereleases,omitempty" json:"include_prereleases,omitempty"`
+	Version    string `yaml:"version,omitempty" json:"version,omitempty"`
+	IncludePre bool   `yaml:"include_prereleases,omitempty" json:"include_prereleases,omitempty"`
 
 	// Snapcraft fields:
 	Snap         string `yaml:"snap,omitempty" json:"snap,omitempty"`
@@ -108,12 +108,12 @@ type ActionConfig struct {
 	Repo string `yaml:"repo,omitempty" json:"repo,omitempty"`
 
 	// create_issue / comment_issue fields:
-	Issue        int      `yaml:"issue,omitempty" json:"issue,omitempty"`                 // Target issue/PR number for comment_issue
-	Title        string   `yaml:"title,omitempty" json:"title,omitempty"`                 // Issue title template for create_issue
-	Body         string   `yaml:"body,omitempty" json:"body,omitempty"`                   // Issue/comment body template
-	Labels       []string `yaml:"labels,omitempty" json:"labels,omitempty"`               // Labels for create_issue or add to comment_issue
-	RemoveLabels []string `yaml:"remove_labels,omitempty" json:"remove_labels,omitempty"` // Labels to remove on comment_issue (e.g. ["blocked"])
-	Assignees    []string `yaml:"assignees,omitempty" json:"assignees,omitempty"`         // Assignees for create_issue
+	Issue        int      `yaml:"issue,omitempty" json:"issue,omitempty"`                   // Target issue/PR number for comment_issue
+	Title        string   `yaml:"title,omitempty" json:"title,omitempty"`                   // Issue title template for create_issue
+	Body         string   `yaml:"body,omitempty" json:"body,omitempty"`                     // Issue/comment body template
+	Labels       []string `yaml:"labels,omitempty" json:"labels,omitempty"`                 // Labels for create_issue or add to comment_issue
+	RemoveLabels []string `yaml:"remove_labels,omitempty" json:"remove_labels,omitempty"`   // Labels to remove on comment_issue (e.g. ["blocked"])
+	Assignees    []string `yaml:"assignees,omitempty" json:"assignees,omitempty"`           // Assignees for create_issue
 	SkipIfClosed *bool    `yaml:"skip_if_closed,omitempty" json:"skip_if_closed,omitempty"` // Skip comment_issue if target issue is already closed (default true)
 
 	// workflow_dispatch / repository_dispatch fields:
