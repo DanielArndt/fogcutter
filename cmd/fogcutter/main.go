@@ -21,7 +21,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const versionStr = "0.1.0"
+const versionStr = "0.1.0" // x-release-please-version
 
 // Report is the structured output of `fogcutter check`.
 type Report struct {
