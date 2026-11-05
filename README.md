@@ -4,7 +4,7 @@
 [![Release](https://img.shields.io/github/v/release/DanielArndt/fogcutter)](https://github.com/DanielArndt/fogcutter/releases)
 [![License](https://img.shields.io/github/license/DanielArndt/fogcutter)](LICENSE)
 
-`fogcutter` is a single-binary Go CLI and composite GitHub Action that periodically checks whether external blockers are resolved and triggers follow-up actions when they unblock.
+`fogcutter` is a single-binary Go CLI that checks whether external blockers are resolved and triggers follow-up actions when they unblock.
 
 ## Features
 
@@ -78,10 +78,18 @@ Record a pinned version (`go get mod@vX`, `pkg>=X`), not `go get -u mod`: a floa
 
 ## Quick Start
 
+### Install
+
+Download a prebuilt binary for Linux, macOS or Windows (amd64 or arm64) from the [releases page](https://github.com/DanielArndt/fogcutter/releases) and verify it against `checksums.txt`, or build from source:
+
+```bash
+go install github.com/DanielArndt/fogcutter/cmd/fogcutter@latest
+```
+
 ### CLI
 
 ```bash
-# Build
+# Build from a checkout
 go build -o fogcutter ./cmd/fogcutter
 
 # Preview blockers and actions in dry-run mode
@@ -95,6 +103,8 @@ go build -o fogcutter ./cmd/fogcutter
 ```
 
 ### GitHub Action
+
+Run fogcutter on a schedule with [fogcutter-action](https://github.com/DanielArndt/fogcutter-action):
 
 ```yaml
 name: Check External Blockers
@@ -113,10 +123,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: DanielArndt/fogcutter@main
+      - uses: DanielArndt/fogcutter-action@v1
         with:
           config: .github/blockers.yaml
           scan: "."
           scan_issues: "true"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+See the [fogcutter-action README](https://github.com/DanielArndt/fogcutter-action#readme) for all inputs and outputs.
