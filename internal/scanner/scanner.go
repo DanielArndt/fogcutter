@@ -397,10 +397,10 @@ func ScanGitHubIssues(ctx context.Context, client *http.Client, apiBase, token, 
 	}
 
 	var issues []struct {
-		Number      int     `json:"number"`
-		Title       string  `json:"title"`
-		Body        string  `json:"body"`
-		Comments    int     `json:"comments"`
+		Number      int       `json:"number"`
+		Title       string    `json:"title"`
+		Body        string    `json:"body"`
+		Comments    int       `json:"comments"`
 		PullRequest *struct{} `json:"pull_request,omitempty"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&issues); err != nil {
