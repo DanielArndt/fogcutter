@@ -1,6 +1,7 @@
 # fogcutter
 
 [![CI](https://github.com/DanielArndt/fogcutter/actions/workflows/ci.yml/badge.svg)](https://github.com/DanielArndt/fogcutter/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/DanielArndt/fogcutter)](https://github.com/DanielArndt/fogcutter/releases)
 [![License](https://img.shields.io/github/license/DanielArndt/fogcutter)](LICENSE)
 
 `fogcutter` is a single-binary Go CLI and composite GitHub Action that periodically checks whether external blockers are resolved and triggers follow-up actions when they unblock.

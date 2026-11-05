@@ -102,9 +102,10 @@ Run `make all` before opening a PR. CI runs the same `make build test` and `make
 
 ## Releases and Versioning
 
-Releases are meant to be automated with **[Release Please](https://github.com/googleapis/release-please)**, which reads the Conventional Commits on `main`:
+Releases are automated with **[Release Please](https://github.com/googleapis/release-please)**, which reads the Conventional Commits on `main`:
 
-- `fix` produces a patch release, `feat` produces a minor release, and a breaking change produces a major release.
-- Release Please keeps an open Release PR that updates the changelog and version. Merging it tags the release and publishes the GitHub Release.
+1. **Commit-driven versions**: `fix` produces a patch release, `feat` a minor release, and a breaking change a major release (while the version is below 1.0, breaking changes bump the minor version).
+2. **Release PR**: Release Please opens and keeps updating a Release PR (for example `chore(main): release 0.2.0`). It updates `CHANGELOG.md`, `.release-please-manifest.json` and the version reported by `fogcutter version` (`cmd/fogcutter/main.go`).
+3. **Publishing**: merging the Release PR tags the release and creates a GitHub Release with notes. The same workflow then builds the CLI for Linux, macOS and Windows (amd64 and arm64) and attaches the archives and a `checksums.txt` to the release.
 
-This is why the PR title matters: the squash-merge title is the commit Release Please reads. The workflow itself is tracked in [#3](https://github.com/DanielArndt/fogcutter/issues/3).
+This is why the PR title matters: the squash-merge title is the commit Release Please reads.
