@@ -1,3 +1,4 @@
 /fogcutter
 /dist/
 *.state.json
+/.worktrees/
