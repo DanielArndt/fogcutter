@@ -121,12 +121,18 @@ func scanFile(path string, defaultActions []config.ActionConfig) ([]config.Block
 	}
 	defer f.Close()
 
-	var blockers []config.Blocker
+	var lines []string
 	sc := bufio.NewScanner(f)
-	lineNum := 0
 	for sc.Scan() {
-		lineNum++
-		line := sc.Text()
+		lines = append(lines, sc.Text())
+	}
+	if err := sc.Err(); err != nil {
+		return nil, err
+	}
+
+	var blockers []config.Blocker
+	for i, line := range lines {
+		lineNum := i + 1
 		// Quick check before regex
 		lower := strings.ToLower(line)
 		if !strings.Contains(lower, "blocker(") &&
@@ -149,6 +155,11 @@ func scanFile(path string, defaultActions []config.ActionConfig) ([]config.Block
 		src, err := ParseSpec(spec)
 		if err != nil {
 			continue
+		}
+		if src.Type == "dependency" && src.Ref == "" {
+			// Follow the upstream version this file builds, so the check moves with
+			// whatever bumps source-tag (e.g. Renovate). Explicit @latest opts out.
+			src.Ref = enclosingSourceRef(lines, i, src.Repo)
 		}
 		loc := fmt.Sprintf("%s:%d", path, lineNum)
 		id := fmt.Sprintf("code:%s:%s", loc, spec)
@@ -173,6 +184,76 @@ func scanFile(path string, defaultActions []config.ActionConfig) ([]config.Block
 	return blockers, nil
 }
 
+var (
+	yamlKeyRe       = regexp.MustCompile(`^(\s*)(?:-\s+)?([A-Za-z0-9_.-]+):(?:\s|$)`)
+	sourceRefKeyRe  = regexp.MustCompile(`^(\s*)source-(?:tag|commit):\s*["']?([^"'\s#]+)`)
+	sourceRepoKeyRe = regexp.MustCompile(`^\s*source:\s*["']?([^"'\s#]+)`)
+)
+
+// enclosingSourceRef returns the source-tag (or source-commit) of the craft part
+// (rockcraft.yaml, snapcraft.yaml, charmcraft.yaml) whose keys contain line idx,
+// typically an annotation inside override-build. The part's key level is the
+// indentation of the nearest key at or above the annotation's indentation; keys
+// at that level are collected up and down until a less indented key (the part
+// header) is reached. If the part's `source:` does not mention repo, nothing is
+// inferred. Returns "" when no ref is found; the checker then uses the latest
+// release.
+func enclosingSourceRef(lines []string, idx int, repo string) string {
+	annIndent := leadingSpaces(lines[idx])
+	partIndent := -1
+	for j := idx - 1; j >= 0; j-- {
+		if m := yamlKeyRe.FindStringSubmatch(lines[j]); m != nil && len(m[1]) <= annIndent {
+			partIndent = len(m[1])
+			// A YAML comment directly under "  go-server:" sits inside that mapping,
+			// at its key level, rather than beside it.
+			if partIndent < annIndent && strings.HasSuffix(strings.TrimSpace(lines[j]), ":") {
+				partIndent = annIndent
+			}
+			break
+		}
+	}
+	if partIndent < 0 {
+		return ""
+	}
+
+	var ref, source string
+	visit := func(line string) bool {
+		m := yamlKeyRe.FindStringSubmatch(line)
+		if m == nil {
+			return true // blank, comment or block scalar content
+		}
+		indent := len(m[1])
+		if indent < partIndent {
+			return false // part header or beyond: stop
+		}
+		if indent > partIndent {
+			return true // nested key, e.g. inside build-environment
+		}
+		if r := sourceRefKeyRe.FindStringSubmatch(line); r != nil && ref == "" {
+			ref = r[2]
+		} else if s := sourceRepoKeyRe.FindStringSubmatch(line); s != nil {
+			source = s[1]
+		}
+		return true
+	}
+	for j := idx - 1; j >= 0 && visit(lines[j]); j-- {
+	}
+	for j := idx + 1; j < len(lines) && visit(lines[j]); j++ {
+	}
+
+	if ref == "" {
+		return ""
+	}
+	if source != "" && !strings.Contains(strings.TrimSuffix(source, ".git"), repo) {
+		return ""
+	}
+	return ref
+}
+
+func leadingSpaces(s string) int {
+	return len(s) - len(strings.TrimLeft(s, " \t"))
+}
+
 // ParseSpec parses a compact blocker specification string into a SourceConfig.
 // Supported forms:
 //   - owner/repo#123
@@ -180,6 +261,8 @@ func scanFile(path string, defaultActions []config.ActionConfig) ([]config.Block
 //   - github-issue:owner/repo#123
 //   - github-release:owner/repo>=v1.2.0
 //   - snap:lxd:latest/stable>=5.21  or  snap:lxd>=5.21
+//   - dep:owner/repo[@ref]:manifest:package>=1.2.3  (without @ref, file scanning uses the
+//     enclosing part's source-tag; otherwise the latest release)
 func ParseSpec(spec string) (config.SourceConfig, error) {
 	spec = strings.TrimSpace(spec)
 	if m := ghURLRe.FindStringSubmatch(spec); m != nil {
@@ -251,6 +334,30 @@ func ParseSpec(spec string) (config.SourceConfig, error) {
 			Snap:    snapName,
 			Channel: channel,
 			Version: constraint,
+		}, nil
+	}
+
+	if strings.HasPrefix(spec, "dep:") || strings.HasPrefix(spec, "dependency:") {
+		rest := strings.TrimPrefix(strings.TrimPrefix(spec, "dependency:"), "dep:")
+		m := verOpRe.FindStringSubmatch(rest)
+		if m == nil {
+			return config.SourceConfig{}, fmt.Errorf("invalid dep spec %q (missing version constraint)", spec)
+		}
+		parts := strings.Split(strings.TrimSpace(m[1]), ":")
+		if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+			return config.SourceConfig{}, fmt.Errorf("invalid dep spec %q (want dep:owner/repo[@ref]:manifest:package>=version)", spec)
+		}
+		repo, ref := parts[0], ""
+		if i := strings.IndexByte(repo, '@'); i != -1 {
+			repo, ref = repo[:i], repo[i+1:]
+		}
+		return config.SourceConfig{
+			Type:     "dependency",
+			Repo:     repo,
+			Ref:      ref,
+			Manifest: parts[1],
+			Package:  parts[2],
+			Version:  strings.TrimSpace(m[2]),
 		}, nil
 	}
 

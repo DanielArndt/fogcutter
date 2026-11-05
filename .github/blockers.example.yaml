@@ -63,7 +63,20 @@ blockers:
           `go/1.26/stable` now has Go >= 1.26.9 ({{.Resolution}}).
           This CVE issue is unblocked and ready for a rock rebuild.
 
-  # 3. Upstream GitHub Release / Tag version blocker
+  # 3. Local CVE override that upstream will make redundant. Resolves once the
+  #    upstream tag referenced in rockcraft.yaml pins golang.org/x/net >= v0.62.0.
+  - id: authentik-x-net-override
+    description: "Drop `go get golang.org/x/net@v0.62.0` from rockcraft.yaml (GO-2026-6860)"
+    source:
+      type: dependency
+      repo: goauthentik/authentik
+      ref_file: rockcraft.yaml        # or ref: latest / ref: version/2026.8.5
+      ref_regex: 'source-tag: (\S+)'
+      manifest: go.mod                # also uv.lock, Cargo.lock, package-lock.json, ...
+      package: golang.org/x/net
+      version: ">=v0.62.0"
+
+  # 4. Upstream GitHub Release / Tag version blocker
   - id: openfga-batch-check-release
     description: "Adopt OpenFGA v1.8.0+ native batch-check API"
     source:

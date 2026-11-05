@@ -1,5 +1,5 @@
 name: "Fogcutter - External Blocker Monitor"
-description: "Periodically check if external blockers (GitHub issues/PRs, Snapcraft releases, GitHub releases, HTTP/JSON, commands) are resolved and trigger follow-up actions."
+description: "Periodically check if external blockers (GitHub issues/PRs, Snapcraft releases, GitHub releases, HTTP/JSON, commands, upstream dependency versions) are resolved and trigger follow-up actions."
 author: "Dan Arndt"
 
 inputs:
