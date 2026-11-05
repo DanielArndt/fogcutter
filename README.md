@@ -10,7 +10,7 @@
     - `// BLOCKER(ory/kratos#364): remove DSN workaround`
     - `# TODO(blocked-by:snap:lxd:5.21/stable>=5.21.2): upgrade LXD`
     - `// BLOCKER(github-release:openfga/openfga>=v1.8.0): adopt batch check`
-    - `# BLOCKER(dep:goauthentik/authentik:go.mod:golang.org/x/net>=v0.62.0): drop x/net CVE override`
+    - `# BLOCKER(dep:goauthentik/authentik:go.mod:golang.org/x/net>=v0.62.0): drop x/net CVE override` (ref from the enclosing part's `source-tag`)
   - **GitHub Issue scanning** (`--scan-issues`) for `Blocked by owner/repo#123` or `BLOCKER(...)` in open issues.
 - **Built-in Blocker Sources**:
   - `github-issue`: Checks if an external GitHub issue or PR is `closed` (with optional `reason: completed` or `merged`).
@@ -38,7 +38,21 @@ override-build: |
   go get golang.org/x/net@v0.62.0   # GO-2026-6860
 ```
 
-Once upstream ships that version itself, the override is dead weight, but "the new release probably bumped it" is not something to trust. Track each override as a `dependency` blocker, with the floor it guarantees and the ref read from the file Renovate bumps:
+Once upstream ships that version itself, the override is dead weight, but "the new release probably bumped it" is not something to trust. Annotate each override with the floor it guarantees, right next to the pin:
+
+```yaml
+parts:
+  go-server:
+    source: https://github.com/goauthentik/authentik
+    source-tag: version/2026.5.8
+    override-build: |
+      # BLOCKER(dep:goauthentik/authentik:go.mod:golang.org/x/net>=v0.62.0): drop x/net override (GO-2026-6860)
+      go get golang.org/x/net@v0.62.0
+```
+
+When a `dep:` annotation in a craft YAML file (`rockcraft.yaml`, `snapcraft.yaml`, ...) has no `@ref`, fogcutter uses the `source-tag` (or `source-commit`) of the part that contains it, so the check follows whatever Renovate bumps. The part's `source:` must point at the same repo; otherwise, or when the part has no tag, the latest release is used. Write `@latest` to always check the latest release, or `@<tag>` to pin one.
+
+The same blocker in `.github/blockers.yaml`, for when you'd rather keep it out of the build file:
 
 ```yaml
 blockers:
@@ -54,7 +68,7 @@ blockers:
       version: ">=v0.62.0"
 ```
 
-Run it on the upgrade pull request: blockers that resolve tell you which overrides to delete in that same PR. Run it on a schedule with `ref: latest` instead to learn early that an upgrade will retire an override.
+Run it on the upgrade pull request: blockers that resolve tell you which overrides to delete in that same PR. Run it on a schedule with `@latest` / `ref: latest` instead to learn early that an upgrade will retire an override.
 
 Record a pinned version (`go get mod@vX`, `pkg>=X`), not `go get -u mod`: a floating upgrade has no version to compare against, and it silently pulls in unrelated changes.
 
