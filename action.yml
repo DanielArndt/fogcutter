@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Daniel Arndt <dan@arndt.ca>
+# SPDX-License-Identifier: Apache-2.0
+
 name: "Fogcutter - External Blocker Monitor"
 description: "Periodically check if external blockers (GitHub issues/PRs, Snapcraft releases, GitHub releases, HTTP/JSON, commands, upstream dependency versions) are resolved and trigger follow-up actions."
 author: "Dan Arndt"

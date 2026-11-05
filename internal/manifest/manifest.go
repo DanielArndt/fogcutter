@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Daniel Arndt <dan@arndt.ca>
+// SPDX-License-Identifier: Apache-2.0
+
 // Package manifest extracts resolved dependency versions from lockfiles and
 // module manifests (go.mod, uv.lock, poetry.lock, Cargo.lock, package-lock.json,
 // requirements*.txt).

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Daniel Arndt <dan@arndt.ca>
+# SPDX-License-Identifier: Apache-2.0
+
 version: "2"
 linters:
   exclusions:
