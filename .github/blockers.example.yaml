@@ -11,6 +11,7 @@ scan:
   ignore:
     - "vendor"
     - "testdata"
+    - "docs"
     - "*_test.go"
     - "README.md"
   issues: false

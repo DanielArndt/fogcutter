@@ -37,9 +37,10 @@ State is only useful if the file survives from one run to the next. In GitHub Ac
 - uses: DanielArndt/fogcutter-action@v1
   with:
     config: .github/blockers.yaml
+    state_file: .fogcutter-state.json
 ```
 
-(with `state_file: .fogcutter-state.json` set in the config). Alternatively commit the file to a dedicated branch.
+The action's `state_file` input maps to `-state-file`; setting `state_file:` in the config works too. Alternatively commit the file to a dedicated branch.
 
 ## Rules
 
