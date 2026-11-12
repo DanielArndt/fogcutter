@@ -10,6 +10,15 @@
 
 `fogcutter` is a single-binary Go CLI that checks whether external blockers are resolved and triggers follow-up actions when they unblock.
 
+## Documentation
+
+Full documentation lives in [`docs/`](docs/README.md), organised by the [Diátaxis](https://diataxis.fr/) framework:
+
+- [Tutorials](docs/README.md#tutorials): start with [your first blocker](docs/tutorials/01-your-first-blocker.md)
+- [How-to guides](docs/README.md#how-to-guides)
+- [Reference](docs/README.md#reference): [CLI](docs/reference/cli.md), [configuration](docs/reference/configuration.md), [sources](docs/reference/sources.md), [actions](docs/reference/actions.md)
+- [Explanation](docs/README.md#explanation)
+
 ## Features
 
 - **Flexible Blocker Discovery**:
